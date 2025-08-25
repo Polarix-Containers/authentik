@@ -1,0 +1,124 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    # Ignore Markdown files
+    paths-ignore:
+      - '**.md'
+  schedule:
+    # Build the image daily
+    - cron: '15 0 * * *'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: polarix-containers/authentik
+
+jobs:
+  build:
+    name: Build & push new image
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract version for tags
+        run: |
+          echo "TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            ${{ env.TAG }}
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  trivy:
+    name: Scan current image with Trivy
+    needs: build
+    permissions:
+      contents: read
+      security-events: write
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract version for tags
+        run: |
+          echo "TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)" >> $GITHUB_ENV
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          format: template
+          template: '@/contrib/sarif.tpl'
+          output: trivy-results.sarif
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          vuln-type: os,library
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  grype:
+    name: Scan current image with Grype
+    needs: build
+    permissions:
+      contents: read
+      security-events: write
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract version for tags
+        run: |
+          echo "TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)" >> $GITHUB_ENV
+
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v6
+        id: grype
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          fail-build: false
+
+      - name: Upload Grype scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+          category: grype
