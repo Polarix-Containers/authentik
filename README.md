@@ -1,6 +1,6 @@
 # Authentik
 
-![Build, scan & push](https://github.com/Polarix-Containers/authentik/actions/workflows/build/badge.svg)
+![Build, scan & push](https://github.com/Polarix-Containers/authentik/actions/workflows/build.yml/badge.svg)
 
 ### Features & usage
 - Unprivileged image: you should check your volumes' permissions (eg `/data`), default UID/GID is 200001.
