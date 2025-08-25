@@ -5,7 +5,7 @@
 ### Features & usage
 - Unprivileged image: you should check your volumes' permissions (eg `/data`), default UID/GID is 200001.
 - ⚠️ Unlike upstream's container, this image does **not** use FIPS cryptography.
-- ⚠️ This image has only been tested to work with OIDC. All other authentication methods ae untested.
+- ⚠️ This image has only been tested to work with OIDC. All other authentication methods are untested.
 
 ### Licensing
 - The code in this repository is licensed under the Apache license. 😇
