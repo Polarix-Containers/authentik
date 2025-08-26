@@ -31,6 +31,8 @@ RUN npm ci \
     && npm run build:sfe
 
 
+# ======================================= #
+
 # Stage 2: Build go proxy
 FROM golang:${GO}-alpine AS go-builder
 
@@ -60,10 +62,12 @@ ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 RUN go mod download \
     && go build -o /go/authentik ./cmd/server
 
+# ======================================= #
 
 # Stage 3: MaxMind GeoIP
 FROM  ghcr.io/goauthentik/server:${VERSION} AS geoip
 
+# ======================================= #
 
 # Stage 4: Base python image
 FROM python:${PYTHON}-alpine AS python-base
@@ -89,6 +93,7 @@ RUN apk -U upgrade \
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 
+# ======================================= #
 
 # Stage 5: Python dependencies
 FROM python-base AS python-deps
@@ -117,6 +122,7 @@ RUN apk add build-base pkgconf libffi-dev git \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y \
     && uv sync --frozen --no-install-project --no-dev
 
+# ======================================= #
 
 # Stage 6: Run
 FROM python-base AS final-image
