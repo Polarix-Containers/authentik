@@ -2,6 +2,7 @@ ARG VERSION=2025.8.1
 ARG NODE=24
 ARG GO=1.25
 ARG PYTHON=3.13
+ARG UV=0.8.13
 ARG UID=200001
 ARG GID=200001
 
@@ -69,7 +70,13 @@ FROM  ghcr.io/goauthentik/server:${VERSION} AS geoip
 
 # ======================================= #
 
-# Stage 4: Base python image
+# Stage 4: Download uv
+
+FROM ghcr.io/astral-sh/uv:${UV} AS uv
+
+# ======================================= #
+
+# Stage 5: Base python image
 FROM python:${PYTHON}-alpine AS python-base
 
 ARG VERSION
@@ -83,7 +90,7 @@ ENV VENV_PATH="/ak-root/.venv" \
 
 WORKDIR /ak-root/
 
-COPY --from=ghcr.io/astral-sh/uv:0.8.13 /uv /uvx /bin/
+COPY --from=uv /uv /uvx /bin/
 
 ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:packages/ /ak-root/packages
 
@@ -95,7 +102,7 @@ ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 
 # ======================================= #
 
-# Stage 5: Python dependencies
+# Stage 6: Python dependencies
 FROM python-base AS python-deps
 
 ARG VERSION
@@ -124,7 +131,7 @@ RUN apk add build-base pkgconf libffi-dev git \
 
 # ======================================= #
 
-# Stage 6: Run
+# Stage 7: Run
 FROM python-base AS final-image
 
 ARG VERSION
