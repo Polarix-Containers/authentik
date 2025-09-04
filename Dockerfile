@@ -90,7 +90,7 @@ ENV VENV_PATH="/ak-root/.venv" \
 
 WORKDIR /ak-root/
 
-COPY --from=uv /uv /uvx /bin/
+COPY --from=uv /uv /bin/
 
 ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:packages/ /ak-root/packages
 
