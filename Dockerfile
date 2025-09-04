@@ -83,10 +83,13 @@ ARG VERSION
 
 ENV VENV_PATH="/ak-root/.venv" \
     PATH="/lifecycle:/ak-root/.venv/bin:$PATH" \
-    UV_COMPILE_BYTECODE=1 \
+    UV_COMPILE_BYTECODE=true \
     UV_LINK_MODE=copy \
-    UV_NATIVE_TLS=1 \
-    UV_PYTHON_DOWNLOADS=0
+    UV_NATIVE_TLS=true \
+    UV_NO_CACHE=true \
+    UV_NO_DEV=true \
+    UV_NO_MANAGED_PYTHON=true \
+    UV_PYTHON_DOWNLOADS=false
 
 WORKDIR /ak-root/
 
