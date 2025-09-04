@@ -2,7 +2,7 @@ ARG VERSION=2025.8.1
 ARG NODE=24
 ARG GO=1.25
 ARG PYTHON=3.13
-ARG UV=0.8.13
+ARG UV=0.8
 ARG UID=200001
 ARG GID=200001
 
@@ -72,7 +72,7 @@ FROM  ghcr.io/goauthentik/server:${VERSION} AS geoip
 
 # Stage 4: Download uv
 
-FROM ghcr.io/astral-sh/uv:${UV} AS uv
+FROM ghcr.io/astral-sh/uv:${UV}-python${PYTHON}-alpine AS uv
 
 # ======================================= #
 
