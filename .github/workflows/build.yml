@@ -111,7 +111,7 @@ jobs:
           echo "TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)" >> $GITHUB_ENV
 
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         id: grype
         with:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
