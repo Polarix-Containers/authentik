@@ -21,6 +21,7 @@ ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:website /wor
 
 RUN apk -U upgrade \
     && apk add libstdc++ \
+    && npm update -g npm \
     && rm -rf /var/cache/apk/* \
     && mkdir -p /work/web/node_modules/@goauthentik/api
 
