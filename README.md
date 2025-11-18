@@ -1,4 +1,4 @@
-# Authentik
+# authentik
 
 ![Build, scan & push](https://github.com/Polarix-Containers/authentik/actions/workflows/build.yml/badge.svg)
 
