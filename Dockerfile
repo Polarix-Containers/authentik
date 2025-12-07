@@ -1,8 +1,16 @@
 ARG VERSION=2025.10.2
+
+# Pinning Alpine version because python-kadmin-rs fails to build on Python 3.23
+ARG ALPINE=3.22
+
 ARG NODE=24
 ARG GO=1.25
 ARG PYTHON=3.13
-ARG UV=0.8
+ARG UV=0.9
+
+# clang version is not officially documented, but this is what upstream uses on Debian Trixie
+ARG CLANG=19
+
 ARG UID=200001
 ARG GID=200001
 
@@ -28,7 +36,7 @@ RUN apk -U upgrade \
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
     
-RUN npm ci \
+RUN npm i \
     && npm run build \
     && npm run build:sfe
 
@@ -78,7 +86,7 @@ FROM ghcr.io/astral-sh/uv:${UV}-python${PYTHON}-alpine AS uv
 # ======================================= #
 
 # Stage 5: Base python image
-FROM python:${PYTHON}-alpine AS python-base
+FROM python:${PYTHON}-alpine${ALPINE} AS python-base
 
 ARG VERSION
 
@@ -110,6 +118,7 @@ ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 FROM python-base AS python-deps
 
 ARG VERSION
+ARG CLANG
 
 ENV PATH="/root/.cargo/bin:$PATH" \
     UV_NO_BINARY_PACKAGE="cryptography lxml python-kadmin-rs xmlsec"
@@ -119,7 +128,7 @@ ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${
 
 RUN apk add build-base pkgconf libffi-dev git \
         # dependencies not explicitly mentioned in upstream's container
-        clang17-libclang xmlsec-dev \
+        clang${CLANG}-libclang krb5-server xmlsec-dev \
         # cryptography
         curl \
         # libxml
@@ -127,7 +136,7 @@ RUN apk add build-base pkgconf libffi-dev git \
         # postgresql
         libpq-dev \
         # python-kadmin-rs
-        clang krb5-dev sccache \
+        clang${CLANG} krb5-dev sccache \
         # xmlsec
         libltdl \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y \
