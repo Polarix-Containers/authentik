@@ -1,4 +1,4 @@
-ARG VERSION=2025.10.2
+ARG VERSION=2025.10.3
 
 # Pinning Alpine version because python-kadmin-rs fails to build on Python 3.23
 ARG ALPINE=3.22
