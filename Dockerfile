@@ -1,4 +1,4 @@
-ARG VERSION=2025.10.3
+ARG VERSION=2025.12.0
 
 # Pinning Alpine version because python-kadmin-rs fails to build on Python 3.23
 ARG ALPINE=3.22
@@ -169,7 +169,8 @@ RUN apk add libpq libmaxminddb ca-certificates krb5-libs libltdl libxslt \
         bash coreutils-env xmlsec \
     && rm -rf /var/cache/apk/* \
     && pip3 install --no-cache-dir --upgrade pip \
-    && mkdir -p /certs /media /blueprints \
+    && mkdir -p /certs /data /media /blueprints \
+    && ln -s /media /data/media \
     && mkdir -p /authentik/.ssh \
     && mkdir -p /ak-root \
     && chown authentik:authentik /certs /media /authentik/.ssh /ak-root
