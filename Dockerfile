@@ -1,8 +1,5 @@
 ARG VERSION=2025.12.0
 
-# Pinning Alpine version because python-kadmin-rs fails to build on Python 3.23
-ARG ALPINE=3.22
-
 ARG NODE=24
 ARG GO=1.25
 ARG PYTHON=3.13
@@ -86,7 +83,7 @@ FROM ghcr.io/astral-sh/uv:${UV}-python${PYTHON}-alpine AS uv
 # ======================================= #
 
 # Stage 5: Base python image
-FROM python:${PYTHON}-alpine${ALPINE} AS python-base
+FROM python:${PYTHON}-alpine AS python-base
 
 ARG VERSION
 
@@ -120,8 +117,10 @@ FROM python-base AS python-deps
 ARG VERSION
 ARG CLANG
 
+# Installing python-kadmin-rs from Pypi instead of building it because fails to build on Python 3.23
+
 ENV PATH="/root/.cargo/bin:$PATH" \
-    UV_NO_BINARY_PACKAGE="cryptography lxml python-kadmin-rs xmlsec"
+    UV_NO_BINARY_PACKAGE="cryptography lxml xmlsec"
 
 ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/pyproject.toml .
 ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/uv.lock .
