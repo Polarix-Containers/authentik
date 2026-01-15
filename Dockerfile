@@ -134,8 +134,8 @@ RUN apk add build-base pkgconf libffi-dev git \
         libxslt-dev zlib-dev \
         # postgresql
         libpq-dev \
-        # python-kadmin-rs
-        clang${CLANG} krb5-dev sccache \
+        # gssapi
+        clang${CLANG} krb5-dev \
         # xmlsec
         libltdl \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y \
