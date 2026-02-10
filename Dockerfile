@@ -1,4 +1,4 @@
-ARG VERSION=2025.12.1
+ARG VERSION=2025.12.3
 
 ARG NODE=24
 ARG GO=1.25
@@ -56,17 +56,18 @@ ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:cmd /go/src/
 ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:authentik/lib /go/src/goauthentik.io/authentik/lib
 ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/web/static.go /go/src/goauthentik.io/web/static.go
 ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:internal /go/src/goauthentik.io/internal
-ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/go.mod /go/src/goauthentik.io/go.mod
 ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/go.sum /go/src/goauthentik.io/go.sum
 
 RUN apk -U upgrade \
-    && apk add build-base libstdc++ \
+    && apk add bash build-base git libstdc++ \
     && rm -rf /var/cache/apk/*
 
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
     
-RUN go mod download \
+RUN --mount=type=bind,target=/go/src/goauthentik.io/go.mod,src=./go.mod \
+    --mount=type=bind,target=/go/src/goauthentik.io/gen-go-api,src=./gen-go-api \
+    go mod download \
     && go build -o /go/authentik ./cmd/server
 
 # ======================================= #
@@ -127,15 +128,15 @@ ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${
 
 RUN apk add build-base pkgconf libffi-dev git \
         # dependencies not explicitly mentioned in upstream's container
-        clang${CLANG}-libclang krb5-server xmlsec-dev \
+        krb5-server xmlsec-dev \
         # cryptography
         curl \
         # libxml
         libxslt-dev zlib-dev \
         # postgresql
         libpq-dev \
-        # gssapi
-        clang${CLANG} krb5-dev \
+        # python-kadmin-rs
+        krb5-dev clang${CLANG}-libclang \
         # xmlsec
         libltdl \
     && curl https://sh.rustup.rs -sSf | sh -s -- -y \

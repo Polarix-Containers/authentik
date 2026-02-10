@@ -5,7 +5,8 @@
 ### Features & usage
 - Unprivileged image: you should check your volumes' permissions (eg `/data`), default UID/GID is 200001.
 - ⚠️ Unlike upstream's container, this image does **not** use FIPS cryptography.
-- ⚠️ This image has only been tested to work with OIDC. All other authentication methods are untested.
+- ⚠️ This image has only been tested to work with OIDC and Forward Auth. All other authentication methods are untested.
+- ⚠️ Keberos will not fully work like upstream, since Alpine Linux does not allow for `krb5` and `heimdal` to be installed at the same time.
 
 ### Licensing
 - The code in this repository is licensed under the Apache license. 😇

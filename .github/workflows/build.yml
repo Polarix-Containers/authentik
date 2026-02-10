@@ -52,6 +52,22 @@ jobs:
           tags: |
             ${{ env.TAG }}
 
+      - name: Fetch build files
+        run: |
+          TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)
+          curl https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${TAG}/go.mod -O
+          curl https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${TAG}/Makefile -O
+          curl https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${TAG}/schema.yml -O
+
+      - name: Setup go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - name: Generate API Clients
+        run: |
+          make gen-client-go
+
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v6
