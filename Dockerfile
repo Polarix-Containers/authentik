@@ -59,7 +59,7 @@ ADD https://github.com/goauthentik/authentik.git#version/${VERSION}:internal /go
 ADD https://raw.githubusercontent.com/goauthentik/authentik/refs/tags/version/${VERSION}/go.sum /go/src/goauthentik.io/go.sum
 
 RUN apk -U upgrade \
-    && apk add bash build-base git libstdc++ \
+    && apk add build-base libstdc++ \
     && rm -rf /var/cache/apk/*
 
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
