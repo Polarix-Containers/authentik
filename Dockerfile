@@ -2,7 +2,7 @@ ARG VERSION=2026.2.0
 
 ARG NODE=24
 ARG GO=1.25
-ARG PYTHON=3.13
+ARG PYTHON=3.14
 ARG UV=0.9
 
 # clang version is not officially documented, but this is what upstream uses on Debian Trixie
