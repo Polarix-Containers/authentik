@@ -34,7 +34,7 @@ jobs:
           echo "TAG=$(grep -oP -m 1 '(?<=VERSION=).*' Dockerfile)" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to registry
         if: github.event_name != 'pull_request'
