@@ -5,8 +5,9 @@ ARG GO=1.26
 ARG PYTHON=3.14
 ARG UV=0.11
 
-# clang version is not officially documented, but this is what upstream uses on Debian Trixie
-ARG CLANG=19
+# clang version is not officially documented, but 19 what upstream uses on Debian Trixie. 
+# We chose 20 because it is the closest available on Alpine 3.24
+ARG CLANG=20
 
 ARG UID=200001
 ARG GID=200001
