@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-24.04
 
     steps:
