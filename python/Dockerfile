@@ -1,9 +1,9 @@
 # This is a copy-paste job from the upstream container, with minor changes to keep the statically linked library and add hardened_malloc
 
-FROM alpine:3.23
+FROM alpine:3.24
 
 # ensure local python is preferred over distribution python
-ENV PATH /usr/local/bin:$PATH
+ENV PATH=/usr/local/bin:$PATH
 
 # runtime dependencies
 RUN apk -U upgrade \
@@ -14,8 +14,8 @@ RUN apk -U upgrade \
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 
-ENV PYTHON_VERSION 3.14.5
-ENV PYTHON_SHA256 7e32597b99e5d9a39abed35de4693fa169df3e5850d4c334337ffd6a19a36db6
+ENV PYTHON_VERSION=3.14.6
+ENV PYTHON_SHA256=143b1dddefaec3bd2e21e3b839b34a2b7fb9842272883c576420d605e9f30c63
 
 RUN set -eux; \
 	\
