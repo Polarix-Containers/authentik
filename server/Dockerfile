@@ -208,6 +208,7 @@ RUN apk add build-base pkgconf libffi-dev git \
 # Stage: Run
 FROM python-base AS final-image
 
+ARG VERSION
 ARG UID
 ARG GID
 
