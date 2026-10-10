@@ -1,6 +1,6 @@
-ARG VERSION=2026.5.7
+ARG VERSION=2026.8.3
 
-ARG NODE=24
+ARG NODE=26
 ARG GO=1.26
 ARG PYTHON=3.14
 ARG UV=0.11
@@ -13,7 +13,7 @@ ARG UID=200001
 ARG GID=200001
 
 # Stage: Repo clone
-FROM scratch AS extract
+FROM golang:${GO}-alpine AS extract
 
 ARG VERSION
 
@@ -26,54 +26,25 @@ ENV NODE_ENV=production
 
 WORKDIR /work/web
 
-COPY --from=extract /extract/web/package.json /work
-COPY --from=extract /extract/packages /work/packages/
-COPY --from=extract /extract/web /work/web/
-COPY --from=extract /extract/website /work/website/
+COPY --from=extract /extract/package.json /work/package.json
+COPY --from=extract /extract/packages /work/packages
+COPY --from=extract /extract/scripts /work/scripts 
+COPY --from=extract /extract/web /work/web
+COPY --from=extract /extract/website /work/website
+COPY --from=extract /extract/.npmrc /work/.npmrc
 
 RUN apk -U upgrade \
     && apk add libstdc++ \
     && npm update -g npm \
-    && rm -rf /var/cache/apk/* \
-    && mkdir -p /work/web/node_modules/@goauthentik/api
+    && npm install -g pnpm \
+    && rm -rf /var/cache/apk/*
 
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:2026081300 /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
     
-RUN npm i \
-    && npm run build \
-    && npm run build:sfe
-
-
-# ======================================= #
-
-# Stage: Build go proxy
-FROM golang:${GO}-alpine AS go-builder
-
-ENV CGO_ENABLED=1
-
-WORKDIR /go/src/goauthentik.io
-
-COPY --from=node-builder /work/web/robots.txt /go/src/goauthentik.io/web/robots.txt
-COPY --from=node-builder /work/web/security.txt /go/src/goauthentik.io/web/security.txt
-
-COPY --from=extract /extract/cmd /go/src/goauthentik.io/cmd
-COPY --from=extract /extract/authentik/lib /go/src/goauthentik.io/authentik/lib
-COPY --from=extract /extract/web/static.go /go/src/goauthentik.io/web/static.go
-COPY --from=extract /extract/internal /go/src/goauthentik.io/internal
-COPY --from=extract /extract/go.mod /go/src/goauthentik.io/go.mod
-COPY --from=extract /extract/go.sum /go/src/goauthentik.io/go.sum
-COPY --from=extract /extract/packages/client-go /go/src/goauthentik.io/packages/client-go
-
-RUN apk -U upgrade \
-    && apk add build-base libstdc++ \
-    && rm -rf /var/cache/apk/*
-
-COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
-ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
-    
-RUN go mod download \
-    && go build -o /go/authentik-server ./cmd/server
+RUN pnpm install --frozen-lockfile \
+    && pnpm run build \
+    && pnpm run build:sfe
 
 # ======================================= #
 
@@ -139,9 +110,13 @@ ENV AWS_LC_FIPS_SYS_CC=clang
 ENV GOTOOLCHAIN=local
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
-COPY --from=go-builder /usr/local/go /usr/local/go
+COPY --from=extract /usr/local/go /usr/local/go
 
 WORKDIR /build
+
+COPY --from=node-builder /work/web/robots.txt /build/web/robots.txt
+COPY --from=node-builder /work/web/security.txt /build/web/security.txt
+COPY --from=node-builder /work/web/dist/standalone/loading/startup.html /build/web/dist/standalone/loading/startup.html
 
 COPY --from=rust-toolchain /root/.rustup /root/.rustup
 COPY --from=rust-toolchain /root/.cargo /root/.cargo
@@ -215,6 +190,7 @@ ARG GID
 ENV TMPDIR=/dev/shm/
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV RUST_BACKTRACE=full
 
 LABEL maintainer="Thien Tran contact@tommytran.io" \
     org.opencontainers.image.version=${VERSION}
@@ -237,7 +213,6 @@ RUN apk add libpq libmaxminddb ca-certificates krb5-libs libltdl libxslt \
     && chown authentik:authentik /certs /media /authentik/.ssh /ak-root
 
 COPY --from=rust-builder /bin/authentik /bin/authentik
-COPY --from=go-builder /go/authentik-server /bin/authentik-server
 COPY --from=python-deps /ak-root/.venv /ak-root/.venv
 COPY --from=node-builder /work/web/dist/ /web/dist/
 COPY --from=node-builder /work/web/authentik/ /web/authentik/
@@ -258,6 +233,6 @@ RUN  ln -s /ak-root/packages /packages
 
 USER authentik
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 CMD [ "ak", "healthcheck" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 CMD [ "ak", "healthcheck" ]
 
 ENTRYPOINT [ "dumb-init", "--", "ak" ]
