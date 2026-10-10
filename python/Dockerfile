@@ -14,8 +14,8 @@ RUN apk -U upgrade \
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 
-ENV PYTHON_VERSION 3.14.7
-ENV PYTHON_SHA256 3b48dac8fb59f62eaa67ac83c1eb12bda1b7a08406dd286e252c11a66be27f81
+ENV PYTHON_VERSION 3.14.8
+ENV PYTHON_SHA256 c2215904f02b175596dc49351585104f4bc20341e1c47378b26a2c274360ce73
 
 RUN set -eux; \
 	\
