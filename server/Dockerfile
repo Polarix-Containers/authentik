@@ -37,7 +37,7 @@ RUN apk -U upgrade \
     && rm -rf /var/cache/apk/* \
     && mkdir -p /work/web/node_modules/@goauthentik/api
 
-COPY --from=ghcr.io/polarix-containers/hardened_malloc:latest /install /usr/local/lib/
+COPY --from=ghcr.io/polarix-containers/hardened_malloc:2026081300 /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
     
 RUN npm i \
