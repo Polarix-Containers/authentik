@@ -3,7 +3,16 @@
 FROM alpine:3.24
 
 # ensure local python is preferred over distribution python
-ENV PATH=/usr/local/bin:$PATH
+ENV PATH /usr/local/bin:$PATH
+
+# cannot remove LANG even though https://bugs.python.org/issue19846 is fixed
+# - embedded interpreters (uWSGI, mod_wsgi, etc) skip locale coercion and UTF-8 mode before Python 3.15, so they fall back to ASCII
+# - musl (alpine) never gets LC_CTYPE set, so anything that reads locale environment variables (babel) finds none
+# last attempted removal of LANG broke many users:
+# https://github.com/docker-library/python/pull/570
+# embedded interpreter reproducer (fails with UnicodeEncodeError without LANG on 3.14 and earlier, needs a non-slim Debian variant for gcc):
+# docker run --rm --env LANG= python:3.14 sh -c 'printf "#include <Python.h>\nint main(){Py_Initialize();PyRun_SimpleString(\"print(chr(252),flush=True)\");}" | gcc -x c - $(python3-config --embed --cflags --ldflags) && ./a.out'
+ENV LANG C.UTF-8
 
 # runtime dependencies
 RUN apk -U upgrade \
@@ -14,8 +23,8 @@ RUN apk -U upgrade \
 COPY --from=ghcr.io/polarix-containers/hardened_malloc:2026081300 /install /usr/local/lib/
 ENV LD_PRELOAD="/usr/local/lib/libhardened_malloc.so"
 
-ENV PYTHON_VERSION 3.14.8
-ENV PYTHON_SHA256 c2215904f02b175596dc49351585104f4bc20341e1c47378b26a2c274360ce73
+ENV PYTHON_VERSION 3.14.10
+ENV PYTHON_SHA256 de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032
 
 RUN set -eux; \
 	\
